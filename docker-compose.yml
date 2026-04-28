@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: pokemon-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://pokemon-user:pokemon-password@mongodb:27017/pokemon-db?authSource=pokemon-db
+    volumes:
+      # Mount source code for hot-reload
+      - ./server/src:/app/src
+      - ./server/package.json:/app/package.json:ro
+      - ./server/package-lock.json:/app/package-lock.json:ro
+      - /app/node_modules
+    depends_on:
+      - mongodb
+    networks:
+      - pokemon-network
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:7.0
+    container_name: pokemon-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+      - MONGO_INITDB_DATABASE=pokemon-db
+    volumes:
+      - mongodb_data:/data/db
+      - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - pokemon-network
+    restart: unless-stopped
+
+networks:
+  pokemon-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
