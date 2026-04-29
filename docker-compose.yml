@@ -3,26 +3,48 @@ version: "3.8"
 services:
   app:
     build:
-      context: ./server
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: server/Dockerfile
     container_name: pokemon-app
     ports:
       - "3000:3000"
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://pokemon-user:pokemon-password@mongodb:27017/pokemon-db?authSource=pokemon-db
-      - SEED_POKEAPI=true
+      - SEED_POKEAPI=false
       - SEED_LIMIT=all
     volumes:
       # Mount source code for hot-reload
-      - ./server/src:/app/src
-      - ./server/package.json:/app/package.json:ro
-      - ./server/package-lock.json:/app/package-lock.json:ro
+      - ./server/src:/app/server/src
+      - ./server/package.json:/app/server/package.json:ro
+      - ./server/package-lock.json:/app/server/package-lock.json:ro
+      - ./shared:/app/server/shared:ro
       - /app/node_modules
     depends_on:
       - mongodb
     networks:
       - pokemon-network
+    restart: unless-stopped
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+    container_name: pokemon-client
+    ports:
+      - "5173:5173"
+    environment:
+      - NODE_ENV=development
+      # For React to call backend from host browser
+      - VITE_API_BASE_URL=http://localhost:3000/api
+    volumes:
+      - ./client:/app/client
+      - ./shared:/app/shared:ro
+      - /app/client/node_modules
+    networks:
+      - pokemon-network
+    depends_on:
+      - app
     restart: unless-stopped
 
   mongodb:
