@@ -21,9 +21,18 @@ export class PokemonController {
   }
 
   @Get()
-  findAll(@Query('type') type?: string) {
+  findAll(
+    @Query('type') type?: string,
+    @Query('page') pageStr?: string,
+    @Query('limit') limitStr?: string,
+  ) {
     if (type) {
       return this.pokemonService.findByType(type);
+    }
+    const limit = limitStr ? Number.parseInt(limitStr, 10) : 0;
+    if (Number.isFinite(limit) && limit > 0) {
+      const page = pageStr ? Number.parseInt(pageStr, 10) : 1;
+      return this.pokemonService.findPage(page, limit);
     }
     return this.pokemonService.findAll();
   }

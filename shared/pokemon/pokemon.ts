@@ -8,5 +8,6 @@ export type Pokemon = TimestampsWithId & {
   hp?: number;
   attack?: number;
   defense?: number;
-  speciesId: string; // ObjectId string ref to Species entity
+  /** Mongoose ref `species` serialized as ObjectId hex string */
+  species: string;
 };

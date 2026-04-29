@@ -19,6 +19,33 @@ export class PokemonService {
     return this.pokemonModel.find().exec();
   }
 
+  async findPage(
+    page: number,
+    limit: number,
+  ): Promise<{
+    items: Pokemon[];
+    total: number;
+    page: number;
+    limit: number;
+  }> {
+    const safePage = Math.max(1, Number.isFinite(page) ? page : 1);
+    const safeLimit = Math.min(
+      100,
+      Math.max(1, Number.isFinite(limit) ? limit : 20),
+    );
+    const skip = (safePage - 1) * safeLimit;
+    const [items, total] = await Promise.all([
+      this.pokemonModel
+        .find()
+        .sort({ number: 1 })
+        .skip(skip)
+        .limit(safeLimit)
+        .exec(),
+      this.pokemonModel.countDocuments().exec(),
+    ]);
+    return { items, total, page: safePage, limit: safeLimit };
+  }
+
   async findOne(id: string): Promise<Pokemon> {
     const pokemon = await this.pokemonModel.findById(id).exec();
     if (!pokemon) {

@@ -8,7 +8,7 @@ export type PokemonDocument = Pokemon & Document;
 @Schema({ timestamps: true })
 export class Pokemon implements Omit<
   GetRawInterface<PokemonType>,
-  'speciesId'
+  'species'
 > {
   @Prop({ required: true, unique: true })
   name: string;

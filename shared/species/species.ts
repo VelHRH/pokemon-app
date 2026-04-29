@@ -1,4 +1,4 @@
-import type { Timestamps, TimestampsWithId } from "../common";
+import type { TimestampsWithId } from "../common";
 
 export type Species = TimestampsWithId & {
   speciesId: number; // PokeAPI pokemon-species id
