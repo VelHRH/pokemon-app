@@ -5,6 +5,7 @@ import { PokemonModule } from './pokemon/pokemon.module';
 import { PokeApiModule } from './pokeapi/pokeapi.module';
 import { SeedModule } from './seed/seed.module';
 import { SpeciesModule } from './species/species.module';
+import { ListsModule } from './lists/lists.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { SpeciesModule } from './species/species.module';
     PokeApiModule,
     SeedModule,
     SpeciesModule,
+    ListsModule,
   ],
 })
 export class AppModule {}
