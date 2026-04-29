@@ -13,15 +13,13 @@ import { SectionTitle } from "./common/Title/SectionTItle";
 import { PokemonCard } from "./PokemonCard";
 import type { Pokemon, PokemonList } from "@shared";
 import { toCardModel } from "@helpers/toCardModel";
+import { MIN_SELECTED_POKEMON, POKEMON_PAGE_SIZE } from "../constants/pokemon";
 
 type Props = {
   open: boolean;
   onClose: () => void;
   onCreated: (list: PokemonList) => void;
 };
-
-const PAGE_SIZE = 12;
-const MIN_SELECTED_POKEMON = 3;
 
 export function CreateListModal({ open, onClose, onCreated }: Props) {
   const titleId = useId();
@@ -44,17 +42,8 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
 
   useEffect(() => {
     if (!open) return;
-    /* eslint-disable react-hooks/set-state-in-effect -- reset list UI when opening modal */
-    setError(null);
-    setListError(null);
-    setSelected(new Set());
-    setItems([]);
-    setTotalCount(0);
-    setNextPage(1);
-    setListInitialLoading(true);
-    /* eslint-enable react-hooks/set-state-in-effect */
     let cancelled = false;
-    listPokemonsPage(1, PAGE_SIZE)
+    listPokemonsPage(1, POKEMON_PAGE_SIZE)
       .then((data) => {
         if (cancelled) return;
         setItems(data.items);
@@ -64,7 +53,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
       .catch((e: unknown) => {
         if (!cancelled) {
           setListError(
-            e instanceof Error ? e.message : "Failed to load Pokémon.",
+            e instanceof Error ? e.message : "Failed to load Pokemon.",
           );
           setItems([]);
         }
@@ -86,21 +75,6 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
     return () => window.removeEventListener("keydown", onKey);
   }, [open, onClose]);
 
-  useEffect(() => {
-    if (open) return;
-    /* eslint-disable react-hooks/set-state-in-effect -- clear modal state when closed */
-    setName("");
-    setSubmitting(false);
-    setError(null);
-    setListError(null);
-    setItems([]);
-    setTotalCount(0);
-    setNextPage(1);
-    setSelected(new Set());
-    /* eslint-enable react-hooks/set-state-in-effect */
-    fetchingRef.current = false;
-  }, [open]);
-
   const loadMore = useCallback(async () => {
     if (!open || listInitialLoading || fetchingRef.current) return;
     if (totalCount > 0 && items.length >= totalCount) return;
@@ -110,7 +84,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
     setListError(null);
     try {
       const page = nextPage;
-      const data = await listPokemonsPage(page, PAGE_SIZE);
+      const data = await listPokemonsPage(page, POKEMON_PAGE_SIZE);
       setItems((prev) => {
         const next = [...prev, ...data.items];
         return next;
@@ -119,7 +93,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
       setNextPage(page + 1);
     } catch (e: unknown) {
       setListError(
-        e instanceof Error ? e.message : "Failed to load more Pokémon.",
+        e instanceof Error ? e.message : "Failed to load more Pokemon.",
       );
     } finally {
       fetchingRef.current = false;
@@ -169,7 +143,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
     }
     const pokemonNumbers = [...selected].sort((a, b) => a - b);
     if (pokemonNumbers.length < MIN_SELECTED_POKEMON) {
-      setError("Select at least three Pokémon.");
+      setError("Select at least three Pokemon.");
       return;
     }
 
@@ -194,7 +168,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
     >
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/50"
         aria-label="Close dialog"
         onClick={onClose}
       />
@@ -207,8 +181,8 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
       >
         <SectionTitle id={titleId}>Create list</SectionTitle>
         <p className="mt-1 text-sm text-neutral-600">
-          Tap Pokémon to select or deselect. The server requires at least three
-          Pokémon that exist in your database and belong to different species.
+          Tap Pokemon to select or deselect. The server requires at least three
+          Pokemon that exist in your database and belong to different species.
           Scroll down to load more.
         </p>
 
@@ -238,7 +212,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
           <div className="flex min-h-0 flex-1 flex-col gap-2">
             <div className="flex flex-wrap items-baseline justify-between gap-2">
               <label className="text-sm font-medium text-neutral-700">
-                Pokémon
+                Pokemon
               </label>
               <span className="text-sm text-neutral-600">
                 {selected.size} selected
@@ -263,7 +237,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
             >
               {listInitialLoading ? (
                 <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-neutral-500">
-                  Loading Pokémon…
+                  Loading Pokemon…
                 </div>
               ) : items.length > 0 ? (
                 <>
@@ -291,7 +265,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
                 </>
               ) : (
                 <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-neutral-500">
-                  No Pokémon loaded.
+                  No Pokemon loaded.
                 </div>
               )}
             </div>
@@ -301,7 +275,7 @@ export function CreateListModal({ open, onClose, onCreated }: Props) {
                 ? `Showing ${items.length} of ${totalCount}`
                 : listInitialLoading
                   ? null
-                  : "0 Pokémon"}
+                  : "0 Pokemon"}
             </div>
           </div>
 

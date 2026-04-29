@@ -68,7 +68,7 @@ export function ListsPage() {
                 <div>
                   <div className="text-lg font-semibold">{l.name}</div>
                   <div className="text-sm text-neutral-600">
-                    {l.pokemonNumbers.length} Pokémon
+                    {l.pokemonNumbers.length} Pokemon
                   </div>
                 </div>
                 <div className="text-sm text-neutral-500">Open →</div>

@@ -61,7 +61,7 @@ export function ListDetailPage() {
           </PageTitle>
           {list ? (
             <div className="mt-1 text-sm text-neutral-600">
-              {list.pokemonNumbers.length} Pokémon
+              {list.pokemonNumbers.length} Pokemon
             </div>
           ) : null}
         </div>

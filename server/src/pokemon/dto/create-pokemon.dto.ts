@@ -42,4 +42,9 @@ export class CreatePokemonDto implements CreatePokemonRequest {
   @IsNumber()
   @Min(0)
   defense?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  weight?: number;
 }

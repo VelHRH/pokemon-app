@@ -8,6 +8,7 @@ import { Model } from 'mongoose';
 import { Pokemon, PokemonDocument } from '../pokemon/pokemon.schema';
 import { PokemonList, PokemonListDocument } from './list.schema';
 import { CreateListDto } from './dto/create-list.dto';
+import { MAX_LIST_TOTAL_WEIGHT_HG } from './list.constants';
 
 @Injectable()
 export class ListsService {
@@ -77,7 +78,7 @@ export class ListsService {
 
   private async validateListRules(pokemonNumbers: number[]): Promise<void> {
     if (pokemonNumbers.length === 0) {
-      throw new BadRequestException('List must include at least 3 Pokémon.');
+      throw new BadRequestException('List must include at least 3 Pokemon.');
     }
 
     const existingNumbers = await this.pokemonModel.distinct('number', {
@@ -88,7 +89,7 @@ export class ListsService {
       const existingSet = new Set<number>(existingNumbers);
       const missing = pokemonNumbers.filter((n) => !existingSet.has(n));
       throw new BadRequestException(
-        `Some Pokémon were not found in the catalogue: ${missing.join(', ')}`,
+        `Some Pokemon were not found in the catalogue: ${missing.join(', ')}`,
       );
     }
 
@@ -98,7 +99,28 @@ export class ListsService {
 
     if (distinctSpecies.length < 3) {
       throw new BadRequestException(
-        `At least 3 Pokémon of different species must be selected (currently: ${distinctSpecies.length}).`,
+        `At least 3 Pokemon of different species must be selected (currently: ${distinctSpecies.length}).`,
+      );
+    }
+
+    await this.validateTotalWeightHg(pokemonNumbers);
+  }
+
+  /**
+   * Sum of each Pokemon's weight (hectograms) must not exceed {@link MAX_LIST_TOTAL_WEIGHT_HG}.
+   */
+  private async validateTotalWeightHg(pokemonNumbers: number[]): Promise<void> {
+    const docs = await this.pokemonModel
+      .find({ number: { $in: pokemonNumbers } })
+      .select({ weight: 1 })
+      .lean()
+      .exec();
+
+    const totalHg = docs.reduce((sum, doc) => sum + (doc.weight ?? 0), 0);
+
+    if (totalHg > MAX_LIST_TOTAL_WEIGHT_HG) {
+      throw new BadRequestException(
+        `Total weight of selected Pokemon must not exceed ${MAX_LIST_TOTAL_WEIGHT_HG} hectograms (current sum: ${totalHg}).`,
       );
     }
   }

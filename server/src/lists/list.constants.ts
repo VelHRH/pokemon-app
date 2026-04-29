@@ -1,0 +1,1 @@
+export const MAX_LIST_TOTAL_WEIGHT_HG = 1300;

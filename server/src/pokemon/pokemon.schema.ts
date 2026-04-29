@@ -6,10 +6,7 @@ import type { GetRawInterface, Pokemon as PokemonType } from '@shared';
 export type PokemonDocument = Pokemon & Document;
 
 @Schema({ timestamps: true })
-export class Pokemon implements Omit<
-  GetRawInterface<PokemonType>,
-  'species'
-> {
+export class Pokemon implements GetRawInterface<PokemonType> {
   @Prop({ required: true, unique: true })
   name: string;
 
@@ -41,6 +38,9 @@ export class Pokemon implements Omit<
 
   @Prop({ default: 0 })
   defense?: number;
+
+  @Prop({ default: 0 })
+  weight?: number;
 }
 
 export const PokemonSchema = SchemaFactory.createForClass(Pokemon);

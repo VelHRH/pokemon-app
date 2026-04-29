@@ -4,22 +4,27 @@ import type { PokemonCardModel } from "@helpers/toCardModel";
 
 type Props = {
   pokemon: PokemonCardModel;
-  /** When set, the card is a button and toggles selection on click. */
   selected?: boolean;
   onToggle?: () => void;
 };
 
 export function PokemonCard({ pokemon, selected, onToggle }: Props) {
   const interactive = Boolean(onToggle);
+  const { number, name, speciesName, types, imageUrl, weight } = pokemon;
 
   const inner = (
     <>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <div className="text-xs text-neutral-500">#{pokemon.number}</div>
-          <div className="text-lg font-semibold">{titleCase(pokemon.name)}</div>
+          <div className="text-xs text-neutral-500">#{number}</div>
+          <div className="text-lg font-semibold">{titleCase(name)}</div>
+          {speciesName ? (
+            <div className="mt-0.5 text-xs font-medium uppercase tracking-wide text-neutral-500">
+              {titleCase(speciesName)} · {weight} kg
+            </div>
+          ) : null}
           <div className="mt-1 flex flex-wrap gap-2">
-            {pokemon.types.map((t) => (
+            {types.map((t) => (
               <span
                 key={t}
                 className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700"
@@ -37,10 +42,14 @@ export function PokemonCard({ pokemon, selected, onToggle }: Props) {
             </span>
           ) : null}
           <div className="h-16 w-16 overflow-hidden rounded-lg bg-neutral-50">
-            {pokemon.imageUrl ? (
+            {imageUrl ? (
               <img
-                src={pokemon.imageUrl}
-                alt={pokemon.name}
+                src={imageUrl}
+                alt={
+                  speciesName
+                    ? `${titleCase(name)} (${titleCase(speciesName)})`
+                    : name
+                }
                 className="h-full w-full object-contain"
                 loading="lazy"
               />

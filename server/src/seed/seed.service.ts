@@ -5,6 +5,7 @@ import { Pokemon, PokemonDocument } from '../pokemon/pokemon.schema';
 import { PokeApiService } from '../pokeapi/pokeapi.service';
 import { SpeciesService } from '../species/species.service';
 import type { PokeApiPokemon, PokeApiSprite } from '../pokeapi/pokeapi.types';
+import { EXPECTED_POKEMON_COUNT } from './seed.constants';
 
 type SeedOptions = {
   enabled: boolean;
@@ -28,8 +29,15 @@ export class SeedService {
       return;
     }
 
-    // Get total count of Pokemons
+    const currentCount = await this.pokemonModel.countDocuments();
+    if (currentCount === EXPECTED_POKEMON_COUNT) {
+      this.logger.log('Pokemons already seeded.');
+      return;
+    }
+
+    // Get total count of Pokemons in PokeAPI
     const { count } = await this.pokeApi.listPokemon();
+
     const target =
       options.limit === 'all'
         ? count
@@ -97,6 +105,7 @@ export class SeedService {
       hp,
       attack,
       defense,
+      weight: p.weight,
     };
   }
 }

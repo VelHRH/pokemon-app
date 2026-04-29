@@ -7,4 +7,5 @@ export type CreatePokemonRequest = {
   hp?: number;
   attack?: number;
   defense?: number;
+  weight?: number;
 };

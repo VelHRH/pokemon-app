@@ -11,7 +11,7 @@ services:
     environment:
       - NODE_ENV=development
       - MONGODB_URI=mongodb://pokemon-user:pokemon-password@mongodb:27017/pokemon-db?authSource=pokemon-db
-      - SEED_POKEAPI=false
+      - SEED_POKEAPI=true
       - SEED_LIMIT=all
     volumes:
       # Mount source code for hot-reload
