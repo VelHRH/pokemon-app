@@ -1,6 +1,14 @@
-import { IsString, IsNumber, IsArray, IsOptional, IsUrl, Min } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsArray,
+  IsOptional,
+  IsUrl,
+  Min,
+} from 'class-validator';
+import type { CreatePokemonRequest } from '@shared';
 
-export class CreatePokemonDto {
+export class CreatePokemonDto implements CreatePokemonRequest {
   @IsString()
   name: string;
 

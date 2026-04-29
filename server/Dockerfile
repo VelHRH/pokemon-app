@@ -2,16 +2,17 @@
 FROM node:20-alpine
 
 # Set working directory
-WORKDIR /app
+WORKDIR /app/server
 
 # Copy package files
-COPY package*.json ./
+COPY server/package*.json ./
 
 # Install dependencies
 RUN npm ci
 
-# Copy source code
-COPY . .
+# Copy server source + shared types
+COPY server/ ./
+COPY shared/ ./shared/
 
 # Expose port
 EXPOSE 3000

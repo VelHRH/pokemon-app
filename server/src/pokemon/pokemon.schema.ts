@@ -1,11 +1,15 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { PokemonSpecies } from '../species/species.schema';
+import type { GetRawInterface, Pokemon as PokemonType } from '@shared';
 
 export type PokemonDocument = Pokemon & Document;
 
 @Schema({ timestamps: true })
-export class Pokemon {
+export class Pokemon implements Omit<
+  GetRawInterface<PokemonType>,
+  'speciesId'
+> {
   @Prop({ required: true, unique: true })
   name: string;
 

@@ -3,7 +3,6 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Pokemon, PokemonDocument } from './pokemon.schema';
 import { CreatePokemonDto } from './dto/create-pokemon.dto';
-import { UpdatePokemonDto } from './dto/update-pokemon.dto';
 
 @Injectable()
 export class PokemonService {
@@ -42,19 +41,6 @@ export class PokemonService {
     return this.pokemonModel
       .find({ type: { $in: [new RegExp(type, 'i')] } })
       .exec();
-  }
-
-  async update(
-    id: string,
-    updatePokemonDto: UpdatePokemonDto,
-  ): Promise<Pokemon> {
-    const updatedPokemon = await this.pokemonModel
-      .findByIdAndUpdate(id, updatePokemonDto, { new: true })
-      .exec();
-    if (!updatedPokemon) {
-      throw new NotFoundException(`Pokemon with ID ${id} not found`);
-    }
-    return updatedPokemon;
   }
 
   async remove(id: string): Promise<void> {

@@ -6,8 +6,9 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import type { UploadListRequest } from '@shared';
 
-export class UploadListDto {
+export class UploadListDto implements UploadListRequest {
   @IsOptional()
   version?: number;
 
