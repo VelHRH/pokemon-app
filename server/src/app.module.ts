@@ -4,6 +4,7 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { PokemonModule } from './pokemon/pokemon.module';
 import { PokeApiModule } from './pokeapi/pokeapi.module';
 import { SeedModule } from './seed/seed.module';
+import { SpeciesModule } from './species/species.module';
 
 @Module({
   imports: [
@@ -23,6 +24,7 @@ import { SeedModule } from './seed/seed.module';
     PokemonModule,
     PokeApiModule,
     SeedModule,
+    SpeciesModule,
   ],
 })
 export class AppModule {}

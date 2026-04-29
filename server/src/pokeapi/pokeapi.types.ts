@@ -19,6 +19,7 @@ export type PokeApiPokemon = {
   is_default: boolean;
   order: number;
   sprites?: Record<string, unknown>;
+  species: PokeApiNamedResource;
   stats: { base_stat: number; effort: number; stat: PokeApiNamedResource }[];
   types: { slot: number; type: PokeApiNamedResource }[];
   abilities: {
@@ -26,6 +27,12 @@ export type PokeApiPokemon = {
     slot: number;
     ability: PokeApiNamedResource;
   }[];
+};
+
+export type PokeApiPokemonSpecies = {
+  id: number;
+  name: string;
+  color: PokeApiNamedResource;
 };
 
 export type PokeApiSprite =

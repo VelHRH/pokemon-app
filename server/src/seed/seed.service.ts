@@ -3,6 +3,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Pokemon, PokemonDocument } from '../pokemon/pokemon.schema';
 import { PokeApiService } from '../pokeapi/pokeapi.service';
+import { SpeciesService } from '../species/species.service';
 import type { PokeApiPokemon, PokeApiSprite } from '../pokeapi/pokeapi.types';
 
 type SeedOptions = {
@@ -18,19 +19,12 @@ export class SeedService {
     @InjectModel(Pokemon.name)
     private readonly pokemonModel: Model<PokemonDocument>,
     private readonly pokeApi: PokeApiService,
+    private readonly speciesService: SpeciesService,
   ) {}
 
   async seedFromPokeApi(options: SeedOptions): Promise<void> {
     if (!options.enabled) {
       this.logger.log('Seeding is disabled.');
-      return;
-    }
-
-    const existing = await this.pokemonModel.estimatedDocumentCount();
-    if (existing > 0) {
-      this.logger.log(
-        `Skipping seed: pokemons collection already has ${existing} documents.`,
-      );
       return;
     }
 
@@ -53,14 +47,22 @@ export class SeedService {
     for (const url of urls) {
       const p = await this.pokeApi.getByUrl<PokeApiPokemon>(url);
 
+      const speciesUrl = p.species?.url ?? '';
+      const species = await this.speciesService.ensureSpecies({
+        speciesUrl,
+        fallbackName: p.species?.name ?? p.name,
+      });
+
       await this.pokemonModel.updateOne(
         { number: p.id },
-        { $set: this.mapToDb(p) },
+        { $set: { ...this.mapToDb(p), species: species._id } },
         { upsert: true },
       );
 
       processed += 1;
-      this.logger.log(`Seed progress: ${processed}/${target}`);
+      if (processed % 50 === 0 || processed === target) {
+        this.logger.log(`Seed progress: ${processed}/${target}`);
+      }
     }
 
     this.logger.log('Seed completed.');
