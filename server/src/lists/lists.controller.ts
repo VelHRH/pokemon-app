@@ -19,28 +19,28 @@ import { ListsService } from './lists.service';
 
 @Controller('lists')
 export class ListsController {
-  constructor(private readonly lists: ListsService) {}
+  constructor(private readonly listsService: ListsService) {}
 
   @Get()
   findAll() {
-    return this.lists.findAll();
+    return this.listsService.findAll();
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.lists.findOne(id);
+    return this.listsService.findOne(id);
   }
 
   @Post()
   create(@Body(ValidationPipe) dto: CreateListDto) {
-    return this.lists.create(dto);
+    return this.listsService.create(dto);
   }
 
   @Get(':id/download')
   async download(@Param('id') id: string, @Res() res: Response) {
-    const list: PokemonListDocument = await this.lists.findOne(id);
+    const list: PokemonListDocument = await this.listsService.findOne(id);
     const body = JSON.stringify(
-      await this.lists.buildDownloadPayload(list),
+      await this.listsService.buildDownloadPayload(list),
       null,
       2,
     );
@@ -98,7 +98,7 @@ export class ListsController {
         })
         .filter((x): x is { number: number } => x !== null);
 
-      return this.lists.recreateFromFile({
+      return this.listsService.recreateFromFile({
         name: name.trim(),
         pokemonNumbers,
         pokemon,
@@ -106,7 +106,7 @@ export class ListsController {
     }
 
     if (body?.name && (body.pokemonNumbers?.length || body.pokemon?.length)) {
-      return this.lists.recreateFromFile({
+      return this.listsService.recreateFromFile({
         name: body.name,
         pokemonNumbers: body.pokemonNumbers,
         pokemon: body.pokemon,

@@ -61,7 +61,7 @@ services:
       - ./init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
     networks:
       - pokemon-network
-    restart: unless-stopped
+    restart: no
 
 networks:
   pokemon-network:

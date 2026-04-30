@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
-import { CreateListModal } from "../components/CreateListModal";
+import { CreateListModal } from "../components/CreatelistModal";
 import { listLists, uploadListFile } from "../lib/api";
 import { PageTitle } from "@components/common/Title/PageTitle";
 import { Button } from "@components/common/Button/Button";

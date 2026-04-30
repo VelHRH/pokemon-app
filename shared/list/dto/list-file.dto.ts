@@ -6,14 +6,7 @@ export type PokemonListFileEntry = {
   weightHg: number;
 };
 
-export type PokemonListFileV1 = {
-  version: 1;
-  name: string;
-  pokemonNumbers: number[];
-};
-
-export type PokemonListFileV2 = {
-  version: 2;
+export type PokemonListFile = {
   name: string;
   exportedAt: string;
   sourceListId?: string;
@@ -21,5 +14,3 @@ export type PokemonListFileV2 = {
   pokemon: PokemonListFileEntry[];
   totalWeightHg: number;
 };
-
-export type PokemonListFile = PokemonListFileV1 | PokemonListFileV2;

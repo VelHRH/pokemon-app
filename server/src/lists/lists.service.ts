@@ -4,8 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model, Types } from 'mongoose';
-import type { PokemonListFileEntry, PokemonListFileV2 } from '@shared';
+import { Model } from 'mongoose';
+import type { PokemonListFile, PokemonListFileEntry } from '@shared';
 import { Pokemon, PokemonDocument } from '../pokemon/pokemon.schema';
 import { PokemonList, PokemonListDocument } from './list.schema';
 import { CreateListDto } from './dto/create-list.dto';
@@ -60,7 +60,7 @@ export class ListsService {
     const pokemonNumbers = this.normalizeNumbers(raw);
     await this.validateListRules(pokemonNumbers);
 
-    const name = await this.disambiguateUploadListName(payload.name.trim());
+    const name = await this.setUploadListName(payload.name.trim());
 
     const created = new this.listModel({
       name,
@@ -69,8 +69,7 @@ export class ListsService {
     return created.save();
   }
 
-  /** If another list already uses this name, try `Name 1`, `Name 2`, … */
-  private async disambiguateUploadListName(trimmed: string): Promise<string> {
+  private async setUploadListName(trimmed: string): Promise<string> {
     let candidate = trimmed;
     let i = 1;
     while (await this.listModel.exists({ name: candidate })) {
@@ -82,7 +81,7 @@ export class ListsService {
 
   async buildDownloadPayload(
     list: PokemonListDocument,
-  ): Promise<PokemonListFileV2> {
+  ): Promise<PokemonListFile> {
     const numbers = list.pokemonNumbers;
     const docs = await this.pokemonModel
       .find({ number: { $in: numbers } })
@@ -103,21 +102,9 @@ export class ListsService {
         throw new BadRequestException(`Pokemon #${n} missing from catalogue.`);
       }
 
-      const speciesField = d.species as
-        | Types.ObjectId
-        | { _id: Types.ObjectId; name: string }
-        | string
-        | null
-        | undefined;
+      const speciesField = d.species as { name: string } | undefined;
 
-      let speciesName: string | undefined;
-      if (
-        speciesField &&
-        typeof speciesField === 'object' &&
-        'name' in speciesField
-      ) {
-        speciesName = speciesField.name;
-      }
+      const speciesName = speciesField?.name;
 
       const w = Number(d.weight ?? 0);
       totalWeightHg += w;
@@ -132,7 +119,6 @@ export class ListsService {
     }
 
     return {
-      version: 2,
       name: list.name,
       exportedAt: new Date().toISOString(),
       sourceListId: String(list._id),

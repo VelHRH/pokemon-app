@@ -19,6 +19,7 @@
       "@components/*": ["./src/components/*"],
       "@pages/*": ["./src/pages/*"],
       "@lib/*": ["./src/lib/*"],
+      "@constants/*": ["./src/constants/*"],
       "@helpers/*": ["./src/helpers/*"]
     },
 
