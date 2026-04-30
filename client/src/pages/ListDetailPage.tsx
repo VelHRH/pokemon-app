@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { API_BASE, getList, listPokemons } from "@lib/api";
+import { Link, useParams } from "react-router-dom";
+import { getList, listDownloadUrl, listPokemons } from "@lib/api";
 import { PokemonCard } from "@components/PokemonCard";
-import { Button } from "@components/common/Button";
+import { AnchorButton } from "@components/common/Button/AnchorButton";
 import { ButtonVariant } from "@components/common/Button/buttonVariants";
 import { PageTitle } from "@components/common/Title/PageTitle";
 import type { Pokemon, PokemonList } from "@shared";
@@ -15,8 +15,6 @@ export function ListDetailPage() {
   const [list, setList] = useState<PokemonList | null>(null);
   const [pokemons, setPokemons] = useState<Pokemon[] | null>(null);
   const [error, setError] = useState<string | null>(null);
-
-  const navigate = useNavigate();
 
   useEffect(() => {
     if (!id) return;
@@ -67,12 +65,12 @@ export function ListDetailPage() {
         </div>
 
         {list ? (
-          <Button
+          <AnchorButton
             variant={ButtonVariant.SECONDARY}
-            onClick={() => navigate(`${API_BASE}/lists/${list._id}/download`)}
+            href={listDownloadUrl(list._id)}
           >
             Download JSON
-          </Button>
+          </AnchorButton>
         ) : null}
       </div>
 

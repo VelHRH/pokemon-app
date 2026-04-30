@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import type { ChangeEvent } from "react";
 import { Link } from "react-router-dom";
 import { CreateListModal } from "../components/CreateListModal";
-import { listLists } from "../lib/api";
+import { listLists, uploadListFile } from "../lib/api";
 import { PageTitle } from "@components/common/Title/PageTitle";
-import { Button } from "@components/common/Button";
+import { Button } from "@components/common/Button/Button";
+import { ButtonVariant } from "@components/common/Button/buttonVariants";
 import { type PokemonList } from "@shared";
 
 export function ListsPage() {
   const [lists, setLists] = useState<PokemonList[] | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const uploadInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -27,13 +32,49 @@ export function ListsPage() {
     };
   }, []);
 
+  async function handleUploadFile(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const list = await uploadListFile(file);
+      setLists((prev) => (prev ? [list, ...prev] : [list]));
+    } catch (err: unknown) {
+      setUploadError(
+        err instanceof Error ? err.message : "Failed to upload list file",
+      );
+    } finally {
+      setUploading(false);
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl p-6">
-      <div className="flex items-center justify-between gap-4">
+      <input
+        ref={uploadInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="sr-only"
+        aria-hidden
+        onChange={handleUploadFile}
+      />
+      <div className="flex flex-wrap items-center justify-between gap-4">
         <PageTitle>Your Pokemon lists</PageTitle>
-        <Button type="button" onClick={() => setCreateOpen(true)}>
-          Create New List
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button
+            type="button"
+            variant={ButtonVariant.SECONDARY}
+            disabled={uploading}
+            onClick={() => uploadInputRef.current?.click()}
+          >
+            {uploading ? "Uploading…" : "Upload list"}
+          </Button>
+          <Button type="button" onClick={() => setCreateOpen(true)}>
+            Create New List
+          </Button>
+        </div>
       </div>
 
       <CreateListModal
@@ -47,6 +88,12 @@ export function ListsPage() {
       {error ? (
         <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
           {error}
+        </div>
+      ) : null}
+
+      {uploadError ? (
+        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+          {uploadError}
         </div>
       ) : null}
 

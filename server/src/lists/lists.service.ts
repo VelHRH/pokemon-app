@@ -4,7 +4,8 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { Model, Types } from 'mongoose';
+import type { PokemonListFileEntry, PokemonListFileV2 } from '@shared';
 import { Pokemon, PokemonDocument } from '../pokemon/pokemon.schema';
 import { PokemonList, PokemonListDocument } from './list.schema';
 import { CreateListDto } from './dto/create-list.dto';
@@ -34,7 +35,7 @@ export class ListsService {
     return this.listModel.find().sort({ createdAt: -1 }).exec();
   }
 
-  async findOne(id: string): Promise<PokemonList> {
+  async findOne(id: string): Promise<PokemonListDocument> {
     const list = await this.listModel.findById(id).exec();
     if (!list) throw new NotFoundException(`List with ID ${id} not found`);
     return list;
@@ -42,23 +43,102 @@ export class ListsService {
 
   async recreateFromFile(payload: {
     name: string;
-    pokemonNumbers: number[];
+    pokemonNumbers?: number[];
+    pokemon?: { number: number }[];
   }): Promise<PokemonList> {
-    const pokemonNumbers = this.normalizeNumbers(payload.pokemonNumbers);
+    let raw: number[] = [];
+    if (payload.pokemonNumbers?.length) {
+      raw = payload.pokemonNumbers;
+    } else if (payload.pokemon?.length) {
+      raw = payload.pokemon.map((p) => p.number);
+    } else {
+      throw new BadRequestException(
+        'Payload must include pokemonNumbers or pokemon entries with number.',
+      );
+    }
+
+    const pokemonNumbers = this.normalizeNumbers(raw);
     await this.validateListRules(pokemonNumbers);
 
+    const name = await this.disambiguateUploadListName(payload.name.trim());
+
     const created = new this.listModel({
-      name: payload.name.trim(),
+      name,
       pokemonNumbers,
     });
     return created.save();
   }
 
-  buildDownloadPayload(list: PokemonList) {
+  /** If another list already uses this name, try `Name 1`, `Name 2`, … */
+  private async disambiguateUploadListName(trimmed: string): Promise<string> {
+    let candidate = trimmed;
+    let i = 1;
+    while (await this.listModel.exists({ name: candidate })) {
+      candidate = `${trimmed} ${i}`;
+      i += 1;
+    }
+    return candidate;
+  }
+
+  async buildDownloadPayload(
+    list: PokemonListDocument,
+  ): Promise<PokemonListFileV2> {
+    const numbers = list.pokemonNumbers;
+    const docs = await this.pokemonModel
+      .find({ number: { $in: numbers } })
+      .populate({ path: 'species', select: 'name' })
+      .lean()
+      .exec();
+
+    const byNumber = new Map<number, Record<string, unknown>>(
+      docs.map((d) => [d.number, d as Record<string, unknown>]),
+    );
+
+    const pokemon: PokemonListFileEntry[] = [];
+    let totalWeightHg = 0;
+
+    for (const n of numbers) {
+      const d = byNumber.get(n);
+      if (!d) {
+        throw new BadRequestException(`Pokemon #${n} missing from catalogue.`);
+      }
+
+      const speciesField = d.species as
+        | Types.ObjectId
+        | { _id: Types.ObjectId; name: string }
+        | string
+        | null
+        | undefined;
+
+      let speciesName: string | undefined;
+      if (
+        speciesField &&
+        typeof speciesField === 'object' &&
+        'name' in speciesField
+      ) {
+        speciesName = speciesField.name;
+      }
+
+      const w = Number(d.weight ?? 0);
+      totalWeightHg += w;
+
+      pokemon.push({
+        number: Number(d.number),
+        name: String(d.name),
+        types: d.type as string[],
+        speciesName,
+        weightHg: w,
+      });
+    }
+
     return {
-      version: 1,
+      version: 2,
       name: list.name,
-      pokemonNumbers: list.pokemonNumbers,
+      exportedAt: new Date().toISOString(),
+      sourceListId: String(list._id),
+      pokemonNumbers: [...numbers],
+      pokemon,
+      totalWeightHg,
     };
   }
 
@@ -106,9 +186,6 @@ export class ListsService {
     await this.validateTotalWeightHg(pokemonNumbers);
   }
 
-  /**
-   * Sum of each Pokemon's weight (hectograms) must not exceed {@link MAX_LIST_TOTAL_WEIGHT_HG}.
-   */
   private async validateTotalWeightHg(pokemonNumbers: number[]): Promise<void> {
     const docs = await this.pokemonModel
       .find({ number: { $in: pokemonNumbers } })

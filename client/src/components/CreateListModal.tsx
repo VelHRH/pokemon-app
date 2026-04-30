@@ -7,7 +7,7 @@ import {
   type FormEvent,
 } from "react";
 import { createList, listPokemonsPage } from "@lib/api";
-import { Button } from "./common/Button";
+import { Button } from "./common/Button/Button";
 import { ButtonVariant } from "./common/Button/buttonVariants";
 import { SectionTitle } from "./common/Title/SectionTItle";
 import { PokemonCard } from "./PokemonCard";

@@ -14,6 +14,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import type { Response } from 'express';
 import { CreateListDto } from './dto/create-list.dto';
 import { UploadListDto } from './dto/upload-list.dto';
+import type { PokemonListDocument } from './list.schema';
 import { ListsService } from './lists.service';
 
 @Controller('lists')
@@ -37,8 +38,12 @@ export class ListsController {
 
   @Get(':id/download')
   async download(@Param('id') id: string, @Res() res: Response) {
-    const list = await this.lists.findOne(id);
-    const payload = this.lists.buildDownloadPayload(list);
+    const list: PokemonListDocument = await this.lists.findOne(id);
+    const body = JSON.stringify(
+      await this.lists.buildDownloadPayload(list),
+      null,
+      2,
+    );
 
     const safeName = (list.name || 'pokemon-list')
       .trim()
@@ -50,7 +55,7 @@ export class ListsController {
       'Content-Disposition',
       `attachment; filename="${safeName}.json"`,
     );
-    res.status(200).send(JSON.stringify(payload, null, 2));
+    res.status(200).send(body);
   }
 
   @Post('upload')
@@ -59,28 +64,57 @@ export class ListsController {
     @UploadedFile() file: { buffer?: Buffer } | undefined,
     @Body(ValidationPipe) body: Partial<UploadListDto>,
   ) {
-    let payload: UploadListDto | null = null;
-
     if (file?.buffer?.length) {
       const text = file.buffer.toString('utf-8');
+      let parsed: Record<string, unknown>;
       try {
-        payload = JSON.parse(text) as UploadListDto;
+        parsed = JSON.parse(text) as Record<string, unknown>;
       } catch {
         throw new BadRequestException('Uploaded file is not valid JSON.');
       }
-    } else if (body?.name && Array.isArray(body?.pokemonNumbers)) {
-      payload = body as UploadListDto;
+      const name = parsed.name;
+      if (typeof name !== 'string' || !name.trim()) {
+        throw new BadRequestException(
+          'Invalid file: property "name" is required.',
+        );
+      }
+      const pokemonNumbers = Array.isArray(parsed.pokemonNumbers)
+        ? (parsed.pokemonNumbers as number[])
+        : undefined;
+      const pokemonRaw = Array.isArray(parsed.pokemon)
+        ? parsed.pokemon
+        : undefined;
+      const pokemon = pokemonRaw
+        ?.map((row) => {
+          if (
+            row &&
+            typeof row === 'object' &&
+            'number' in row &&
+            typeof (row as { number: unknown }).number === 'number'
+          ) {
+            return { number: (row as { number: number }).number };
+          }
+          return null;
+        })
+        .filter((x): x is { number: number } => x !== null);
+
+      return this.lists.recreateFromFile({
+        name: name.trim(),
+        pokemonNumbers,
+        pokemon,
+      });
     }
 
-    if (!payload) {
-      throw new BadRequestException(
-        'No payload provided. Upload a JSON file as `file` or send JSON body.',
-      );
+    if (body?.name && (body.pokemonNumbers?.length || body.pokemon?.length)) {
+      return this.lists.recreateFromFile({
+        name: body.name,
+        pokemonNumbers: body.pokemonNumbers,
+        pokemon: body.pokemon,
+      });
     }
 
-    return this.lists.recreateFromFile({
-      name: payload.name,
-      pokemonNumbers: payload.pokemonNumbers,
-    });
+    throw new BadRequestException(
+      'No payload provided. Upload a JSON file as `file`, or send JSON body with name and pokemonNumbers or pokemon[].',
+    );
   }
 }

@@ -1,6 +1,6 @@
 export type UploadListRequest = {
   version?: number;
   name: string;
-  pokemonNumbers: number[];
+  pokemonNumbers?: number[];
+  pokemon?: { number: number }[];
 };
-

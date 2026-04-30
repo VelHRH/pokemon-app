@@ -16,8 +16,13 @@ export class UploadListDto implements UploadListRequest {
   @MinLength(1)
   name: string;
 
+  @IsOptional()
   @IsArray()
   @IsInt({ each: true })
   @Min(1, { each: true })
-  pokemonNumbers: number[];
+  pokemonNumbers?: number[];
+
+  @IsOptional()
+  @IsArray()
+  pokemon?: { number: number }[];
 }
