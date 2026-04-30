@@ -20,7 +20,7 @@ export function PokemonCard({ pokemon, selected, onToggle }: Props) {
           <div className="text-lg font-semibold">{titleCase(name)}</div>
           {speciesName ? (
             <div className="mt-0.5 text-xs font-medium uppercase tracking-wide text-neutral-500">
-              {titleCase(speciesName)} · {weight} kg
+              {titleCase(speciesName)} · {weight} hg
             </div>
           ) : null}
           <div className="mt-1 flex flex-wrap gap-2">
